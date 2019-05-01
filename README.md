@@ -6,4 +6,4 @@
 >  - Lexer (Tokenizer) 
 >  - Parser
 >  - Semantic Analyzer 
->  - Code Generator 
+>  - Code Generator (IR, probably going to use LLVM)

@@ -1,5 +1,5 @@
-from lexer import Lexer
-from lexer2 import genToken
+from obsModules.lexer import Lexer
+from obsModules.lexer2 import genToken
 import re
 from tokenizer import tokenizer
 

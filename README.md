@@ -9,7 +9,7 @@
 
 ## Status:
 * Current using Python for implementation
-* Libraries being used as a learning tool: rPLY, LLVM/lite
-* rPLY for Lexer & Parser
-* LLVM for generating machine code
+* ~~Libraries being used as a learning tool: rPLY, LLVM/lite~~ Not using rPLY for Lexer and Parser
+* ~~rPLY for Lexer & Parser~~
+* LLVM for generating machine code [?] Might not need to use LLVM
 * Current language input: Unknown because the professor hasn't told us yet. So thats cool. Will assume Pascal as input for now

@@ -36,13 +36,13 @@ symbolsDict = {
 
 
 reservedDict = {
-    'if': 'TOKEN_IF',
-    'while': 'TOKEN_WHILE',
-    'var': 'TOKEN_VAR',
-    'writeln': 'TOKEN_WRITELN',
-    'begin': 'TOKEN_BEGIN',
-    'end': 'TOKEN_END',
-    'program': 'TOKEN_PROGRAM',
-    'goto': 'TOKEN_GOTO'
+    'if': ('TOKEN_IF', 'if'),
+    'while': ('TOKEN_WHILE', 'while'),
+    'var': ('TOKEN_VAR', 'var'),
+    'writeln': ('TOKEN_WRITELN', 'writeln'),
+    'begin': ('TOKEN_BEGIN', 'begin'),
+    'end': ('TOKEN_END', 'end'),
+    'program': ('TOKEN_PROGRAM', 'program'),
+    'goto': ('TOKEN_GOTO', 'goto')
 }
 

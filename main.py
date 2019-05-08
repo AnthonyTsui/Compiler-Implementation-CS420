@@ -1,6 +1,9 @@
 from lexer import Lexer
 from lexer2 import genToken
 import re
+from tokenizer import tokenizer
+
+
 
 text_input = """
 print(4 + 4 - 2) * ;
@@ -8,47 +11,34 @@ print(4 + 4 - 2) * ;
 
 genLexer = Lexer().get_lexer()
 tokens = genLexer.lex(text_input)
-
-
-
-for token in tokens:
-    print(token)
+#for token in tokens:
+#    print(token)
 
 print('Test cases for re.split:')
 
-row = 'print(4+2-1);'
-print(re.split('(\W)', row))
+row = 'writeln(4+2-1);thenwe checkif this thing actuall works int main() {4+4+2*4^3}; :='
+#print(re.split('(\W)', row))
 
 
 testTokenizer = genToken()
-testTokenizer.add_tokens(row.replace(' ', ''))
+testTokenizer.add_tokens(row)
 
 for token in testTokenizer.tokens:
     print(token)
 
-'''
-testList = []
-testList.append([1,0])
-testList.append(['Yeah','It works'])
-print(testList)
-print(testList[0][1])
+
+print('Below is the test for our token function')
 
 
-testString = 'Yeah this is a b i g test +-4 () '
-testString.split()
-print(testString.split())
+tokenizerClass = tokenizer()
+testTokens = []
 
-testString2 = 'print(4 + 4 - 2)'
-for char in testString2:
-    if(char.isalpha()):
-        print(char+' is alpha')
+#row = 'print(4+2-1);thenwe checkif this thing actuall works int main() {4+4+2*4^3}; :='
 
 
-testTokenizer = genToken()
-testTokenizer.add_tokens(testString2)
+for preToken in re.split('(\W)', row):
+            if not preToken == '' and not preToken == ' ':
+                    testTokens.append(tokenizerClass.parse_and_tokenize(preToken))
 
-for token in testTokenizer.tokens:
-    print(token)
-    '''
-
-
+for token in testTokens:
+        print(token)

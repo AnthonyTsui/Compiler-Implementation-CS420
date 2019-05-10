@@ -1,4 +1,8 @@
-INTEGER, PLUS, MINUS, EOF, MULT, DIV = 'INTEGER', 'PLUS', 'MINUS', 'EOF', 'MULT', 'DIV'
+import sys
+import re
+import os
+
+INTEGER, PLUS, MINUS, EOF, MULT, DIV, LPAREN, RPAREN = 'INTEGER', 'PLUS', 'MINUS', 'EOF', 'MULT', 'DIV', '(', ')'
 
 
 class Token(object):
@@ -70,6 +74,14 @@ class Lexer(object):
             if self.currChar == '/':
                 self.nextToken()
                 return Token(DIV, '/')
+                
+            if self.currChar == '(':
+                self.nextToken()
+                return Token(LPAREN, '*')
+            
+            if self.currChar == ')':
+                self.nextToken()
+                return Token(RPAREN, '/')
 
             self.error()
 
@@ -92,8 +104,18 @@ class Compiler(object):
 
     def getFactor(self):
         token = self.currToken
-        self.removeToken(INTEGER)
-        return token.value
+
+        if token.type == INTEGER:
+            print(token)
+            self.removeToken(INTEGER)
+            return token.value
+        elif token.type == LPAREN:
+            print(token)
+            self.removeToken(LPAREN)
+            result = self.express()
+            self.removeToken(RPAREN)
+            return result
+        
 
     def getTerm(self):
         result = self.getFactor()
@@ -101,6 +123,7 @@ class Compiler(object):
 
         while self.currToken.type in termOps:
             token = self.currToken
+            print(token)
             if token.type == MULT:
                 self.removeToken(MULT)
                 result = result * self.getFactor()
@@ -116,6 +139,7 @@ class Compiler(object):
 
         while self.currToken.type in expOps:
             token = self.currToken
+            print(token)
             if token.type == PLUS:
                 self.removeToken(PLUS)
                 result = result + self.getTerm()
@@ -126,8 +150,15 @@ class Compiler(object):
 
 
 def main():
-    testline = '1+2*10/2+5'
-    testcompiler = Compiler(testline)
+    path = os.getcwd()
+    path = path + '\\newApproach\\testfile.txt' #passing in the testfile
+    #print(path)
+    with open(path, 'r') as file:
+        testInput = file.read()
+        print(testInput)
+
+    #testline = '14 + 2 * 3 - 6 / 2'
+    testcompiler = Compiler(testInput)
     result = testcompiler.express()
     print(result)
 

@@ -95,32 +95,38 @@ class Compiler(object):
         self.removeToken(INTEGER)
         return token.value
 
-    def express(self):
-
+    def getTerm(self):
         result = self.getFactor()
-        ops = (PLUS, MINUS, MULT, DIV)
-        while self.currToken.type in ops:
+        termOps = (MULT, DIV)
+
+        while self.currToken.type in termOps:
             token = self.currToken
-            if token.type == PLUS:
-                self.removeToken(PLUS)
-                result = result + self.getFactor()
-            if token.type == MINUS:
-                self.removeToken(MINUS)
-                result = result - self.getFactor()
             if token.type == MULT:
                 self.removeToken(MULT)
                 result = result * self.getFactor()
-            if token.type == DIV:
+            elif token.type == DIV:
                 self.removeToken(DIV)
                 result = result / self.getFactor()
+        return result
 
+    def express(self):   #for addition and subtraction, since we perform getTerm() on multiplicatin and division first
 
-        
+        result = self.getTerm()
+        expOps = (PLUS, MINUS)
+
+        while self.currToken.type in expOps:
+            token = self.currToken
+            if token.type == PLUS:
+                self.removeToken(PLUS)
+                result = result + self.getTerm()
+            elif token.type == MINUS:
+                self.removeToken(MINUS)
+                result = result - self.getTerm()
         return result
 
 
 def main():
-    testline = '20/10*6'
+    testline = '1+2*10/2+5'
     testcompiler = Compiler(testline)
     result = testcompiler.express()
     print(result)

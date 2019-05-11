@@ -2,7 +2,9 @@ import sys
 import re
 import os
 
-INTEGER, PLUS, MINUS, EOF, MULT, DIV, LPAREN, RPAREN = 'INTEGER', 'PLUS', 'MINUS', 'EOF', 'MULT', 'DIV', '(', ')'
+(INTEGER, PLUS, MINUS, EOF, MULT, DIV, LPAREN, RPAREN, ID, ASSIGN, BEGIN, END, PERIOD, SEMI) = ('INTEGER', 
+'PLUS', 'MINUS', 'EOF', 'MULT', 'DIV', '(', ')', 'ID', 'ASSIGN', 'BEGIN', 'END', 'PERIOD',
+'SEMI')
 
 
 class Token(object):
@@ -19,6 +21,12 @@ class Token(object):
 
     def __repr__(self):
         return self.__str__()
+
+KEYWORDS = {'BEGIN': Token('BEGIN','BEGIN'),
+            'END': Token('END', 'END'),
+            'IF': Token('IF','IF"'),
+
+            }
 
 
 class Lexer(object):
@@ -37,6 +45,21 @@ class Lexer(object):
         else:
             self.currChar = self.input[self.pos]
 
+    def checkNext(self):
+        checkPos = self.pos + 1
+        if checkPos > len(self.input) - 1:
+            return None
+        else:
+            return self.input[checkPos]
+
+    def _id(self):
+        result = ''
+        while self.currChar is not None and self.currChar.isalnum():
+            result += self.currChar
+            self.nextToken()
+        token = KEYWORDS.get(result, Token(ID, result))
+        return token
+
     def skipSpace(self):
         while self.currChar is not None and self.currChar.isspace():
             self.nextToken()
@@ -47,6 +70,8 @@ class Lexer(object):
             result += self.currChar
             self.nextToken()
         return int(result)
+
+    
 
     def getNextToken(self):
 
@@ -83,10 +108,28 @@ class Lexer(object):
                 self.nextToken()
                 return Token(RPAREN, '/')
 
+            if self.currChar.isalpha():
+                return self._id()
+            
+            if self.currChar == ':' and self.checkNext() == '=':
+                self.nextToken()
+                self.nextToken()
+                return Token(ASSIGN, ':=')
+
+            if self.currChar == ';':
+                self.nextToken()
+                return Token(SEMI, ';')
+            
+            if self.currChar == '.':
+                self.nextToken()
+                return Token(PERIOD, '.')
+
             self.error()
 
         return Token(EOF, None)
 
+
+#List of nodes ##############################################################
 class ASTNode(object):
     pass
 
@@ -106,8 +149,26 @@ class UnaryOp(ASTNode):
         self.token = self.oper = oper
         self.express = express
 
+class CompoundState(ASTNode):
+    def __init__(self):
+        self.children = []
+
+class AssignOp(ASTNode):
+    def __init__(self, left, right, oper):
+        self.left = left
+        self.right = right
+        self.oper = self.token = oper
+
+class Variable(ASTNode):        #identifiers
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
+class EmptyStatement(ASTNode): #becase theres nothing between the Begin and End 
+    pass
+
 class visitNode(object):
-    def visit(self, node):
+    def visit(self, node):      #Easy way to dynamically call a visit function for each node
         method_name = 'visit' + type(node).__name__
         visited = getattr(self, method_name, self.generic_visit)
         return visited(node)
@@ -129,7 +190,6 @@ class Parser(object):
             self.currToken = self.lexer.getNextToken()
         else:
             self.error()
-
 
     def getFactor(self):
         token = self.currToken
@@ -153,6 +213,9 @@ class Parser(object):
             #print (token)
             self.removeToken(MINUS)
             node = UnaryOp(token, self.getFactor())
+            return node
+        else:
+            node = self.isVariable()
             return node
 
     def getTerm(self):
@@ -184,11 +247,74 @@ class Parser(object):
             node = BinOp(left = node, oper = token, right = self.getTerm())
         return node
     
+    def compoundState(self):
+        self.removeToken(BEGIN)
+        nodeList = self.listStates()
+        self.removeToken(END)
+        root = CompoundState()
+
+        for node in nodeList:
+            root.children.append(node)
+        return root
+
+
+    def pascalProg(self):
+        node = self.compoundState()
+        self.removeToken(PERIOD)
+        return node
+
+    def listStates(self):
+        node = self.statements()
+        results = [node]
+
+        while self.currToken.type == SEMI:
+            self.removeToken(SEMI)
+            results.append(self.statements())
+
+        if self.currToken.type == ID:
+            self.error()
+        
+        return results
+    
+    def statements(self):
+        if self.currToken.type == BEGIN:
+            node = self.compoundState()
+        elif self.currToken.type == ID:
+            node = self.assignState()
+        else: 
+            node = self.isEmpty()
+        return node
+        
+
+    def assignState(self):
+        left = self.isVariable()
+        token = self.currToken
+        self.removeToken(ASSIGN)
+        right = self.express()
+        node = AssignOp(left, right, token)
+        return node
+
+    def isVariable(self):
+        node = Variable(self.currToken)
+        self.removeToken(ID)
+        return node
+
+    def isEmpty(self):
+        return EmptyStatement()
+
+
+    
+    
     def parse(self):
-        return self.express()
+        node = self.pascalProg()
+        if self.currToken.type != EOF:
+            self.error()
+        return node
 
 
 class Compiler(visitNode):
+    SYMBOL_TABLE = {}
+
     def __init__(self, parse):
         self.parser = parse
     
@@ -210,6 +336,26 @@ class Compiler(visitNode):
             return +self.visit(node.express)
         if node.oper.type == MINUS:
             return -self.visit(node.express)
+    
+    def visitCompoundState(self, node):
+        for nodes in node.children:
+            self.visit(nodes)
+
+    def visitAssignOp(self, node):
+        varName = node.left.value
+        self.SYMBOL_TABLE[varName] = self.visit(node.right)
+
+    def visitVariable(self, node):
+        varName = node.value
+        val = self.SYMBOL_TABLE.get(varName)
+        if val is None:
+            raise NameError(repr(varName))
+        else:
+            return val
+
+    def visitEmptyStatement(self, node):
+        pass
+    
     
     def compile(self):
         ASTree = self.parser.parse()
@@ -233,6 +379,7 @@ def main():
     parser = Parser(lexer)
     compiler = Compiler(parser)
     result = compiler.compile()
+    print(compiler.SYMBOL_TABLE)
     print(result)
 
 if __name__ == '__main__':

@@ -167,7 +167,7 @@ class Parser(object):
                 self.removeToken(PLUS)
             elif token.type == MINUS:
                 self.removeToken(MINUS)
-        node = BinOp(left = node, oper = token, right = self.getTerm())
+            node = BinOp(left = node, oper = token, right = self.getTerm())
         return node
     
     def parse(self):

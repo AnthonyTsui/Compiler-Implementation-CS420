@@ -87,9 +87,33 @@ class Lexer(object):
 
         return Token(EOF, None)
 
-class Compiler(object):
-    def __init__(self, text):
-        self.lexer = Lexer(text)
+class ASTNode(object):
+    pass
+
+class BinOp(ASTNode):
+    def __init__(self, left, right, oper):
+        self.left = left
+        self.right = right
+        self.oper = self.token = oper
+
+class Number(ASTNode):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
+class visitNode(object):
+    def visit(self, node):
+        method_name = 'visit' + type(node).__name__
+        visited = getattr(self, method_name, self.generic_visit)
+        return visited(node)
+
+    def generic_visit(self, node):
+        raise Exception('No visiting {} method found'.format(type(node).__name__))
+
+
+class Parser(object):
+    def __init__(self, Lexer):
+        self.lexer = Lexer
         self.currToken = self.lexer.getNextToken()
     
     def error(self):
@@ -108,17 +132,17 @@ class Compiler(object):
         if token.type == INTEGER:
             print(token)
             self.removeToken(INTEGER)
-            return token.value
+            return Number(token)
         elif token.type == LPAREN:
             print(token)
             self.removeToken(LPAREN)
-            result = self.express()
+            node = self.express()
             self.removeToken(RPAREN)
-            return result
+            return node
         
 
     def getTerm(self):
-        result = self.getFactor()
+        node = self.getFactor()
         termOps = (MULT, DIV)
 
         while self.currToken.type in termOps:
@@ -126,15 +150,14 @@ class Compiler(object):
             print(token)
             if token.type == MULT:
                 self.removeToken(MULT)
-                result = result * self.getFactor()
             elif token.type == DIV:
                 self.removeToken(DIV)
-                result = result / self.getFactor()
-        return result
+            node = BinOp(left = node, oper = token, right = self.getFactor())
+        return node
 
     def express(self):   #for addition and subtraction, since we perform getTerm() on multiplicatin and division first
 
-        result = self.getTerm()
+        node = self.getTerm()
         expOps = (PLUS, MINUS)
 
         while self.currToken.type in expOps:
@@ -142,12 +165,35 @@ class Compiler(object):
             print(token)
             if token.type == PLUS:
                 self.removeToken(PLUS)
-                result = result + self.getTerm()
             elif token.type == MINUS:
                 self.removeToken(MINUS)
-                result = result - self.getTerm()
-        return result
+        node = BinOp(left = node, oper = token, right = self.getTerm())
+        return node
+    
+    def parse(self):
+        return self.express()
 
+
+class Compiler(visitNode):
+    def __init__(self, parse):
+        self.parser = parse
+    
+    def visitBinOp(self, node):
+        if node.oper.type == PLUS:
+            return self.visit(node.left) + self.visit(node.right)
+        elif node.oper.type == MINUS:
+            return self.visit(node.left) - self.visit(node.right)
+        elif node.oper.type == MULT:
+            return self.visit(node.left) * self.visit(node.right)
+        elif node.oper.type == DIV:
+            return self.visit(node.left) / self.visit(node.right)
+    
+    def visitNumber(self, node):
+        return node.value
+    
+    def compile(self):
+        ASTree = self.parser.parse()
+        return self.visit(ASTree) #inherited from visitNode class
 
 def main():
     path = os.getcwd()
@@ -158,11 +204,16 @@ def main():
         print(testInput)
 
     #testline = '14 + 2 * 3 - 6 / 2'
-    testcompiler = Compiler(testInput)
-    result = testcompiler.express()
+    #testcompiler = Parser(testInput)
+    #result = testcompiler.express()
+    #print(result)
+
+
+    lexer = Lexer(testInput)
+    parser = Parser(lexer)
+    compiler = Compiler(parser)
+    result = compiler.compile()
     print(result)
-
-
 
 if __name__ == '__main__':
     main()

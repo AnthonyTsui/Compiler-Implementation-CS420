@@ -101,13 +101,18 @@ class Number(ASTNode):
         self.token = token
         self.value = token.value
 
+class UnaryOp(ASTNode):
+    def __init__(self, oper, express):
+        self.token = self.oper = oper
+        self.express = express
+
 class visitNode(object):
     def visit(self, node):
         method_name = 'visit' + type(node).__name__
         visited = getattr(self, method_name, self.generic_visit)
         return visited(node)
 
-    def generic_visit(self, node):
+    def generic_visit(self, node):      #for exception handling when finding invalid tokens
         raise Exception('No visiting {} method found'.format(type(node).__name__))
 
 
@@ -139,7 +144,16 @@ class Parser(object):
             node = self.express()
             self.removeToken(RPAREN)
             return node
-        
+        elif token.type == PLUS:
+            #print (token)
+            self.removeToken(PLUS)
+            node = UnaryOp(token, self.getFactor())
+            return node
+        elif token.type == MINUS:
+            #print (token)
+            self.removeToken(MINUS)
+            node = UnaryOp(token, self.getFactor())
+            return node
 
     def getTerm(self):
         node = self.getFactor()
@@ -190,6 +204,12 @@ class Compiler(visitNode):
     
     def visitNumber(self, node):
         return node.value
+    
+    def visitUnaryOp(self, node):
+        if node.oper.type == PLUS:
+            return +self.visit(node.express)
+        if node.oper.type == MINUS:
+            return -self.visit(node.express)
     
     def compile(self):
         ASTree = self.parser.parse()

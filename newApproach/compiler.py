@@ -4,9 +4,9 @@ import os
 
 (INTEGER, REAL, INT_NUM, REAL_NUM, PLUS, MINUS, EOF, MULT, INT_DIV, 
 LPAREN, RPAREN, ID, ASSIGN, BEGIN, END, DOT, SEMI, 
-COMMA, COLON, FLOAT_DIV, VAR, PROGRAM, DOT) =('INTEGER', 'REAL', 'INT_NUM', 'REAL_NUM','PLUS', 'MINUS', 
+COMMA, COLON, FLOAT_DIV, VAR, PROGRAM, DOT, EQUAL, WRITELN, APOS, STRING_LITERAL) =('INTEGER', 'REAL', 'INT_NUM', 'REAL_NUM','PLUS', 'MINUS', 
 'EOF', 'MULT', 'INT_DIV', '(', ')', 'ID', 'ASSIGN', 'BEGIN', 'END', 'DOT','SEMI', 'COMMA', 
-'COLON', 'FLOAT_DIV', 'VAR', 'PROGRAM', 'DOT')
+'COLON', 'FLOAT_DIV', 'VAR', 'PROGRAM', 'DOT', 'EQUAL', 'WRITELN', "'", 'STRING_LITERAL')
 
 
 class Token(object):
@@ -33,7 +33,7 @@ KEYWORDS = {'BEGIN': Token('BEGIN','BEGIN'),
             'DIV': Token('INT_DIV', 'DIV'),
             'INTEGER':Token('INTEGER', 'INTEGER'),
             'REAL': Token('REAL','REAL'),
-            }
+            'writeln': Token('WRITELN','WRITELN')}
 
 
 class Lexer(object):
@@ -76,6 +76,14 @@ class Lexer(object):
             self.nextToken()
         self.nextToken()
             
+    def stringLiteral(self):
+        returnString = ''
+        while self.currChar != "'":
+            returnString += self.currChar
+            self.nextToken()
+        self.nextToken()
+        return Token(STRING_LITERAL, returnString)
+    
     def allNumbers(self):
         result = ''
         while self.currChar is not None and self.currChar.isdigit():
@@ -91,8 +99,6 @@ class Lexer(object):
         else:
             token = Token('INT_NUM', int(result))
         return token
-
-    
 
     def getNextToken(self):
 
@@ -112,8 +118,6 @@ class Lexer(object):
 
             if self.currChar.isdigit():
                 return self.allNumbers()
-
-            
 
             if self.currChar == '+':
                 self.nextToken()
@@ -160,7 +164,9 @@ class Lexer(object):
                 self.nextToken()
                 return Token(COMMA, ',')
             
-
+            if self.currChar == "'":
+                self.nextToken()
+                return self.stringLiteral()
 
             self.error()
 
@@ -226,6 +232,17 @@ class varType(ASTNode):
         self.value = token.value
         #self.type = token.type      #EXCESS?
 
+class writeStatement(ASTNode):
+    def __init__(self, token):      #here token would be an expression?
+        #self.token = token
+        self.token = token
+        self.value = token.value   #What to print I guess
+        #Need to return a token that is both: "string" + Expression
+
+class stringLiteral(ASTNode):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
 
 class visitNode(object):
     def visit(self, node):      #Easy way to dynamically call a visit function for each node
@@ -358,10 +375,23 @@ class Parser(object):
             node = self.compoundState()
         elif self.currToken.type == ID:
             node = self.assignState()
+        elif self.currToken.type == WRITELN:
+            node = self.writeState()
         else: 
             node = self.isEmpty()
         return node
+       
+    def writeState(self):           #WriteStatement ----Unfinished
+        self.removeToken(WRITELN)
+        self.removeToken(LPAREN)
         
+        node = writeStatement(self.currToken)
+
+        self.removeToken(STRING_LITERAL)
+        self.removeToken(RPAREN)
+
+        return node
+            
 
     def assignState(self):
         left = self.isVariable()
@@ -381,7 +411,7 @@ class Parser(object):
 
     def stateBlock(self):
         varBlocksNode = self.declares()
-        compoundStatementNode = self.compoundState()
+        compoundStatementNode = self.compoundState()    #compoundState=after assignments
         node = stateBlock(varBlocksNode, compoundStatementNode)
         return node
 
@@ -455,6 +485,8 @@ class Compiler(visitNode):
             return self.visit(node.left) // self.visit(node.right)
         elif node.oper.type == FLOAT_DIV:
             return float(self.visit(node.left)) / float(self.visit(node.right))
+        elif node.oper.tpye == EQUAL:
+            return (self.visit(node.left) == self.visit(node.right))
     
     def visitNumber(self, node):
         #print('We are at visit number with:')
@@ -500,6 +532,10 @@ class Compiler(visitNode):
     def visitvarType(self, node):
         pass
     
+    def visitwriteStatement(self, node):
+        print (node.value)
+        pass
+
     def compile(self):
         ASTree = self.parser.parse()
         if ASTree is None:
@@ -527,6 +563,8 @@ def main():
 
     for a, b in sorted(compiler.SYMBOL_TABLE.items()):
         print('{} = {}'.format(a, b))
+
+    print(result)
 
 
 if __name__ == '__main__':

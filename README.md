@@ -16,22 +16,22 @@
 
 Features:
 - [x] Pascal Program
-- [x] Variable
-- [x] Assignments
+- [x] Variable 
+- [x] Assignments**(Required)** **(Required)**
 - [ ] Writeln (done for strings)
 - [x] Addition/Subtraction
 - [x] Multiplication/Division
 - [ ] TypeChecking
 - [x] Begin/End
-- [x] Symbol Table
-- [ ] If/Else
-- [ ] While
-- [ ] And
-- [x] Procedures (Kind of)
-- [x] Declarations
-- [ ] Repeat
-- [ ] Goto
-- [ ] Case
+- [x] Symbol Table 
+- [ ] If/Else **(Required)**
+- [ ] While **(Required)**
+- [ ] And **(Required)**
+- [x] Procedures (Kind of) **(Required)**
+- [x] Declarations **(Required)**
+- [ ] Repeat **(Required)**
+- [ ] Goto **(Required)**
+- [ ] Case **(Required)**
 - [x] Tokenizer (Kind of done?)
 - [x] Lexer ^
 - [x] Parser ^

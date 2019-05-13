@@ -27,7 +27,11 @@ Features:
 - [ ] If/Else
 - [ ] While
 - [ ] And
-- [ ] Procedures
+- [x] Procedures (Kind of)
+- [x] Declarations
+- [ ] Repeat
+- [ ] Goto
+- [ ] Case
 - [x] Tokenizer (Kind of done?)
 - [x] Lexer ^
 - [x] Parser ^

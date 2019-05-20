@@ -18,7 +18,7 @@ Features:
 - [x] Pascal Program
 - [x] Variable 
 - [x] Assignments**(Required)** **(Required)**
-- [ ] Writeln (done for strings)
+- [x] Writeln (done for strings)
 - [x] Addition/Subtraction
 - [x] Multiplication/Division
 - [ ] TypeChecking

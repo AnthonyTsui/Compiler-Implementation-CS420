@@ -4,9 +4,9 @@ import os
 
 (INTEGER, REAL, INT_NUM, REAL_NUM, PLUS, MINUS, EOF, MULT, INT_DIV, 
 LPAREN, RPAREN, ID, ASSIGN, BEGIN, END, DOT, SEMI, 
-COMMA, COLON, FLOAT_DIV, VAR, PROGRAM, DOT, EQUAL, WRITELN, APOS, STRING_LITERAL) =('INTEGER', 'REAL', 'INT_NUM', 'REAL_NUM','PLUS', 'MINUS', 
+COMMA, COLON, FLOAT_DIV, VAR, PROGRAM, DOT, EQUAL, WRITELN, APOS, STRING_LITERAL, IF, ELSE) =('INTEGER', 'REAL', 'INT_NUM', 'REAL_NUM','PLUS', 'MINUS', 
 'EOF', 'MULT', 'INT_DIV', '(', ')', 'ID', 'ASSIGN', 'BEGIN', 'END', 'DOT','SEMI', 'COMMA', 
-'COLON', 'FLOAT_DIV', 'VAR', 'PROGRAM', 'DOT', 'EQUAL', 'WRITELN', "'", 'STRING_LITERAL')
+'COLON', 'FLOAT_DIV', 'VAR', 'PROGRAM', 'DOT', 'EQUAL', 'WRITELN', "'", 'STRING_LITERAL', 'IF', 'ELSE')
 
 
 class Token(object):
@@ -377,6 +377,10 @@ class Parser(object):
             node = self.assignState()
         elif self.currToken.type == WRITELN:
             node = self.writeState()
+        elif self.currToken.type == IF:
+            node = self.writeState()    #for if states
+        elif self.currToken.type == ELSE:
+            node = self.writeState()    #for else blocks
         else: 
             node = self.isEmpty()
         return node
@@ -550,6 +554,37 @@ class Compiler(visitNode):
         if ASTree is None:
             return ''
         return self.visit(ASTree)
+
+class stackMachine:
+    def __init__(self, symbolTable):
+        self.codeStack = []
+        self.instructionList = []
+        self.symbolTable = symbolTable
+        self.currPos = 0
+
+    def genCode(self, state, operType, oper1 = None , oper2 = None):
+        print (state, operType, oper1, oper2)
+        if operType == 'PLUS':
+            if oper1 == 'REAL_LITERAL':
+                instruction = ['OP_FADD']
+            elif oper1 == 'INT_LITERAL':
+                instruction = ['OP_ADD']
+            else:
+                instruction = ['OP_ADD']
+            self.generateInstruct(instruction)
+
+    def generatePush(self, token):
+        instruction = ['OP_PUSH', token.value]
+        self.generateInstruct(instruction)
+    
+    def generatePop(self, ident):
+        memoryAdd = self.symbolTable.lookup_addr(ident)
+        instruction = ['OP_POP', memoryAdd]
+        self.generateInstruct(instruction)
+    
+    def generateInstruct(self, instruction):
+        self.instructionList.append(instruction)
+
 
 def main():
     path = os.getcwd()

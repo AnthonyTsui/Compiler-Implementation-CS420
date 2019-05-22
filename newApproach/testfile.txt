@@ -9,12 +9,9 @@ BEGIN {Part10}
       number := 2;
       a := number;
       b := 10 * a + 10 * number DIV 4;
-      writeln('##############################');
       writeln('Below are the output values for a and b:');
       writeln (a);
       writeln (b);
-      writeln ('Test string print');
-      writeln ('##############################');
       c := a - - b
       
    END;

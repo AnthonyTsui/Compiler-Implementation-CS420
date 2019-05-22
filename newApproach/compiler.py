@@ -588,7 +588,7 @@ class stackMachine:
 
 def main():
     path = os.getcwd()
-    path = path + '\\newApproach\\testfile.txt' #passing in the testfile
+    path = path + '\\newApproach\\sample1.pas' #passing in the testfile
     #print(path)
     with open(path, 'r') as file:
         testInput = file.read()
@@ -607,6 +607,8 @@ def main():
 
     for a, b in sorted(compiler.SYMBOL_TABLE.items()):
         print('{} = {}'.format(a, b))
+    print('Testfile for if else')
+    print (4)
 
 
 

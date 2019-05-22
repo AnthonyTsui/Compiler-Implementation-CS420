@@ -1,4 +1,4 @@
-program addNumsandIf;
+program sample2;
 
 Var a,b : Integer;
 Var c: Integer;

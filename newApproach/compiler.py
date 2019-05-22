@@ -233,10 +233,10 @@ class varType(ASTNode):
         #self.type = token.type      #EXCESS?
 
 class writeStatement(ASTNode):
-    def __init__(self, token):      #here token would be an expression?
+    def __init__(self, node):      #here token would be an expression?
         #self.token = token
-        self.token = token
-        self.value = token.value   #What to print I guess
+        self.node = node
+        self.value = node.value   #What to print I guess
         #Need to return a token that is both: "string" + Expression
 
 class stringLiteral(ASTNode):
@@ -384,10 +384,14 @@ class Parser(object):
     def writeState(self):           #WriteStatement ----Unfinished
         self.removeToken(WRITELN)
         self.removeToken(LPAREN)
-        
-        node = writeStatement(self.currToken)
-
-        self.removeToken(STRING_LITERAL)
+        if self.currToken.type == ID:
+            varNode = Variable(self.currToken)
+            node = writeStatement(varNode)
+            self.removeToken(ID)
+        elif self.currToken.type == STRING_LITERAL:
+            stringNode = Variable(self.currToken)
+            node = writeStatement(stringNode)
+            self.removeToken(STRING_LITERAL)
         self.removeToken(RPAREN)
 
         return node
@@ -533,7 +537,12 @@ class Compiler(visitNode):
         pass
     
     def visitwriteStatement(self, node):
-        print (node.value)
+        if node.node.token.type == ID:  #this is disgusting, need to redo
+            toPrint = self.visitVariable(node.node)
+        elif node.node.token.type == STRING_LITERAL:
+            toPrint = node.node.value
+        print(toPrint)
+        #print (node.value)
         pass
 
     def compile(self):
@@ -564,7 +573,6 @@ def main():
     for a, b in sorted(compiler.SYMBOL_TABLE.items()):
         print('{} = {}'.format(a, b))
 
-    print(result)
 
 
 if __name__ == '__main__':
